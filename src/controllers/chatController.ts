@@ -16,7 +16,7 @@ export async function getChats(req:AuthRequest,res:Response,next:NextFunction){
             const otherParticipants = chat.participants.filter(participant=>participant._id.toString()!==userId);
             return {
                 _id: chat._id,
-                participants: otherParticipants,
+                participants: otherParticipants ?? null,
                 lastMessage: chat.lastMessage,
                 lastMessageAt: chat.lastMessageAt,
                 createdAt: chat.createdAt,
@@ -36,6 +36,18 @@ export async function getOrCreateChat(req:AuthRequest,res:Response,next:NextFunc
     try{
         const userId = req.userId;
         const {participantId} = req.params;
+
+        if(!participantId){
+            res.status(400).json({message:"Participant ID is required"});
+            return;
+        }
+
+    
+
+        if(participantId===userId){
+            res.status(400).json({message:"Cannot create chat with yourself"});
+            return;
+        }
 
         let chat = await Chat.findOne({
             participants: {$all: [userId,participantId]}
